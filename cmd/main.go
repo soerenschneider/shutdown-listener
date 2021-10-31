@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/soerenschneider/shutdown-listener/internal"
 	"github.com/soerenschneider/shutdown-listener/internal/config"
-	mqtt2 "github.com/soerenschneider/shutdown-listener/internal/handlers/mqtt"
+	"github.com/soerenschneider/shutdown-listener/internal/handlers/mqtt"
 	"github.com/soerenschneider/shutdown-listener/internal/verification"
 	"os"
 	"os/user"
@@ -19,11 +19,13 @@ const (
 	cliVersion  = "version"
 )
 
-var envConfFile = fmt.Sprintf("%s_CONFIG", strings.ToUpper(config.AppName))
+var envConfFile = fmt.Sprintf("%s_CONFIG", strings.ReplaceAll(strings.ToUpper(config.AppName), "-", "_"))
 
 func main() {
 	configFile := ParseCliFlags()
 	conf, err := config.ReadJsonConfig(configFile)
+	log.Info().Msgf("Started version %s, commit %s", internal.BuildVersion, internal.CommitHash)
+	internal.MetricVersion.WithLabelValues(internal.BuildVersion, internal.CommitHash).Set(1)
 	if err != nil {
 		log.Fatal().Msgf("could not read config file from %s: %v", err)
 	}
@@ -44,7 +46,10 @@ func main() {
 		log.Fatal().Msgf("could not build command center: %v", err)
 	}
 
-	cmd.Start()
+	err = cmd.Start()
+	if err != nil {
+		log.Fatal().Msgf("could not run: %v", err)
+	}
 }
 
 func buildVerification(conf *config.Config) (internal.VerificationStrategy, error) {
@@ -57,12 +62,12 @@ func buildHandlers(conf *config.Config) ([]internal.Handler, error) {
 	// TODO: Implement
 	log.Info().Msg("Building message handlers...")
 	handlers := make([]internal.Handler, 0)
-	mqtt, err := mqtt2.NewMqttHandler(&conf.MqttConfig)
+	mqttHandler, err := mqtt.NewMqttHandler(&conf.MqttConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not build mqtt handler: %v", err)
 	}
 
-	handlers = append(handlers, mqtt)
+	handlers = append(handlers, mqttHandler)
 
 	return handlers, nil
 }

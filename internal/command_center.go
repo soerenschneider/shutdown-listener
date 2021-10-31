@@ -8,22 +8,38 @@ import (
 	"os/exec"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
+// VerificationStrategy allows defining multiple strategies to either drop or accept an incoming message.
 type VerificationStrategy interface {
+	// Verify accepts a received message and determines whether the message is ought to be accepted or not. Returns an
+	// error if the verification failed and the message should be dropped.
 	Verify(string) error
 }
 
+// Handler receives shutdown messages from different sources and dispatches them to the command center.
 type Handler interface {
+	// Start initializes the handler in order to start receiving messages. It accepts the channel that it should
+	// write the received messages to.
 	Start(chan string) error
+
+	// Shutdown shuts the handler down safely.
 	Shutdown()
+
+	// Name returns the distinctive name of this handler.
 	Name() string
 }
 
 type CommandCenter struct {
+	// selected strategy to verify the received messages
 	verifier VerificationStrategy
+
+	// slice of handlers that we can receive messages from
 	handlers []Handler
-	cmd      []string
+
+	// the cmd to execute once a received message has been accepted
+	cmd []string
 }
 
 func NewCommandCenter(verification VerificationStrategy, handlers []Handler, cmd []string) (*CommandCenter, error) {
@@ -51,16 +67,15 @@ func (c *CommandCenter) Start() error {
 
 	go func() {
 		for read := range msgQueue {
-			err := c.verifier.Verify(read)
-			if err == nil {
-				log.Info().Msgf("Received and successfully verified message, running cmd %s with args %v", c.cmd[0], c.cmd[1:])
-				err := runHook(c.cmd)
-				if err != nil {
-					log.Error().Err(err)
-				}
-			} else {
-				log.Warn().Msgf("Received message but could not verify it: %v", err)
-			}
+			verifyAndRun(c.verifier, read, c.cmd)
+		}
+	}()
+
+	heartbeat := time.NewTicker(1 * time.Minute)
+	go func() {
+		for {
+			<-heartbeat.C
+			MetricHeartbeat.SetToCurrentTime()
 		}
 	}()
 
@@ -69,6 +84,7 @@ func (c *CommandCenter) Start() error {
 
 	<-done
 	close(msgQueue)
+	heartbeat.Stop()
 	log.Info().Msgf("Received signal, shutting down...")
 	for _, handler := range c.handlers {
 		handler.Shutdown()
@@ -82,10 +98,24 @@ func (c *CommandCenter) startHandlers(msgQueue chan string) error {
 		log.Info().Msgf("Starting handler %s", handler.Name())
 		err := handler.Start(msgQueue)
 		if err != nil {
-			log.Error().Msgf("Could not start handler %s: %v", handler.Name(), err)
+			return fmt.Errorf("could not start handler %s: %v", handler.Name(), err)
 		}
 	}
 	return nil
+}
+
+func verifyAndRun(verifier VerificationStrategy, read string, commands []string) {
+	err := verifier.Verify(read)
+	if err == nil {
+		log.Info().Msgf("Received and successfully verified message, running cmd %s with args %v", commands[0], commands[1:])
+		err := runHook(commands)
+		if err != nil {
+			log.Error().Err(err)
+		}
+	} else {
+		MetricMessageVerifyErrors.Inc()
+		log.Warn().Msgf("Received message but could not verify it: %v", err)
+	}
 }
 
 func runHook(command []string) error {

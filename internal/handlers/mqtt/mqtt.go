@@ -5,6 +5,7 @@ import (
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog/log"
+	"github.com/soerenschneider/shutdown-listener/internal"
 	"github.com/soerenschneider/shutdown-listener/internal/config"
 	"math/rand"
 	"os"
@@ -72,6 +73,10 @@ func (m *Mqtt) Start(queue chan string) error {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(m.conf.Host)
+
+	opts.OnReconnecting = func(client mqtt.Client, options *mqtt.ClientOptions) {
+		internal.MetricMqttReconnections.Inc()
+	}
 
 	opts.SetClientID(getClientId())
 	m.client = mqtt.NewClient(opts)
