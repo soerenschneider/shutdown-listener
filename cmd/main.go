@@ -27,7 +27,7 @@ func main() {
 	log.Info().Msgf("Started version %s, commit %s", internal.BuildVersion, internal.CommitHash)
 	internal.MetricVersion.WithLabelValues(internal.BuildVersion, internal.CommitHash).Set(1)
 	if err != nil {
-		log.Fatal().Msgf("could not read config file from %s: %v", err)
+		log.Fatal().Msgf("could not read config file from %s: %v", configFile, err)
 	}
 
 	verificationStrategy, err := buildVerification(conf)

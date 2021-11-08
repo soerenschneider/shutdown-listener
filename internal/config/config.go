@@ -75,7 +75,7 @@ func (conf *Config) Print() {
 	log.Println("-----------------")
 	log.Println("Configuration:")
 	log.Printf("MetricConfig=%s", conf.MetricConfig)
-	log.Printf("Command=%d", conf.Command)
+	log.Printf("Command=%v", conf.Command)
 	log.Printf("Host=%s", conf.Host)
 	log.Printf("Topic=%s", conf.Topic)
 	log.Println("-----------------")
