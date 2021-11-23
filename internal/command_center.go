@@ -110,7 +110,8 @@ func verifyAndRun(verifier VerificationStrategy, read string, commands []string)
 		log.Info().Msgf("Received and successfully verified message, running cmd %s with args %v", commands[0], commands[1:])
 		err := runHook(commands)
 		if err != nil {
-			log.Error().Err(err)
+			log.Error().Msgf("Could not run command: %v", err)
+			MetricCommandExecutionFailures.Inc()
 		}
 	} else {
 		MetricMessageVerifyErrors.Inc()

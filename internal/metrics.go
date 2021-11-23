@@ -15,6 +15,13 @@ var (
 )
 
 var (
+	MetricCommandExecutionFailures = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: namespace,
+		Subsystem: "cmdcenter",
+		Name:      "cmd_exec_errors_total",
+		Help:      "Total amount of errors while trying to execute the configured command",
+	})
+
 	MetricMessageVerifyErrors = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: "server",
