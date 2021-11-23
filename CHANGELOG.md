@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.2](https://www.github.com/soerenschneider/shutdown-listener/compare/v1.0.1...v1.0.2) (2021-11-23)
+
+
+### Bug Fixes
+
+* start metrics handler on startup ([07554d8](https://www.github.com/soerenschneider/shutdown-listener/commit/07554d89814c39c3b11270d1e81b5759d5ae2909))
+
 ### [1.0.1](https://www.github.com/soerenschneider/shutdown-listener/compare/v1.0.0...v1.0.1) (2021-11-08)
 
 
