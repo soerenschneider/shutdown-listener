@@ -40,6 +40,10 @@ func main() {
 		log.Fatal().Msgf("could not build handlers: %v", err)
 	}
 
+	if len(conf.MetricConfig) > 0 {
+		go internal.StartMetricsServer(conf.MetricConfig)
+	}
+
 	log.Info().Msg("Building command center..")
 	cmd, err := internal.NewCommandCenter(verificationStrategy, handlers, conf.Command)
 	if err != nil {
