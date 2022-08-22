@@ -3,7 +3,7 @@ package httphandler
 import (
 	"errors"
 	"github.com/soerenschneider/shutdown-listener/internal"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync"
 )
@@ -57,7 +57,7 @@ func (handler *HttpHandler) Start(queue chan string) error {
 }
 
 func (handler *HttpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		internal.MetricHttpRequestErrors.Inc()
 	}
