@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/soerenschneider/shutdown-listener/compare/v1.1.0...v1.1.1) (2022-08-22)
+
+
+### Bug Fixes
+
+* clientid and auto reconnect ([8f08a2f](https://github.com/soerenschneider/shutdown-listener/commit/8f08a2f465384c5a66e2ebf116196a430ecfd69a))
+
 ## [1.1.0](https://www.github.com/soerenschneider/shutdown-listener/compare/v1.0.1...v1.1.0) (2021-11-23)
 
 
