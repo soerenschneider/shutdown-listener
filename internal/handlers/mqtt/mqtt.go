@@ -47,13 +47,24 @@ func (m *Mqtt) msgHandler(client mqtt.Client, message mqtt.Message) {
 }
 
 func getClientId() string {
+	prefix := "shutdown-listener"
 	hostname, err := os.Hostname()
 	if err != nil {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)
-		return fmt.Sprintf("shutdown-listener-%d", r1.Int63())
+		return fmt.Sprintf("%s-%d", prefix, r1.Int63())
 	}
-	return hostname
+
+	return fmt.Sprintf("%s-%s", prefix, hostname)
+}
+
+var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
+	log.Info().Msg("Successfully connected to broker")
+}
+
+var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
+	log.Info().Msgf("Connection lost: %v", err)
+	internal.MetricMqttReconnections.Inc()
 }
 
 func (m *Mqtt) Start(queue chan string) error {
@@ -73,12 +84,11 @@ func (m *Mqtt) Start(queue chan string) error {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(m.conf.Host)
+	opts.OnConnect = connectHandler
+	opts.OnConnectionLost = connectLostHandler
+	opts.AutoReconnect = true
+	opts.ClientID = getClientId()
 
-	opts.OnReconnecting = func(client mqtt.Client, options *mqtt.ClientOptions) {
-		internal.MetricMqttReconnections.Inc()
-	}
-
-	opts.SetClientID(getClientId())
 	m.client = mqtt.NewClient(opts)
 	if token := m.client.Connect(); token.WaitTimeout(waitTimeout) && token.Error() != nil {
 		log.Error().Msgf("Can not connect to broker %s: %v", m.conf.Host, token.Error())
