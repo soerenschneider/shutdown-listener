@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.1
 	github.com/prometheus/client_golang v1.13.0
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
 )
 
 require (
