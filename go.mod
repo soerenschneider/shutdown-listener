@@ -3,7 +3,7 @@ module github.com/soerenschneider/shutdown-listener
 go 1.17
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.4.1
+	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.28.0
 )
