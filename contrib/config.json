@@ -1,4 +1,4 @@
 {
-  "mqtt_host": "tcp://192.168.200.1:1883",
+  "mqtt_host": "tcp://localhost:1883",
   "mqtt_topic": "shutdown_listener/app1"
 }

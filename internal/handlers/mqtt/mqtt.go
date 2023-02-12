@@ -58,8 +58,12 @@ func getClientId() string {
 	return fmt.Sprintf("%s-%s", prefix, hostname)
 }
 
-var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
+func (m *Mqtt) OnConnectHandler(client mqtt.Client) {
 	log.Info().Msg("Successfully connected to broker")
+
+	if token := client.Subscribe(m.conf.Topic, 1, m.msgHandler); token.WaitTimeout(waitTimeout) && token.Error() != nil {
+		log.Error().Msgf("Can not subscribe to topic %s: %v", m.conf.Topic, token.Error())
+	}
 }
 
 var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
@@ -84,7 +88,7 @@ func (m *Mqtt) Start(queue chan string) error {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(m.conf.Host)
-	opts.OnConnect = connectHandler
+	opts.OnConnect = m.OnConnectHandler
 	opts.OnConnectionLost = connectLostHandler
 	opts.AutoReconnect = true
 	opts.ClientID = getClientId()
@@ -92,11 +96,6 @@ func (m *Mqtt) Start(queue chan string) error {
 	m.client = mqtt.NewClient(opts)
 	if token := m.client.Connect(); token.WaitTimeout(waitTimeout) && token.Error() != nil {
 		log.Error().Msgf("Can not connect to broker %s: %v", m.conf.Host, token.Error())
-		return token.Error()
-	}
-
-	if token := m.client.Subscribe(m.conf.Topic, 1, m.msgHandler); token.WaitTimeout(waitTimeout) && token.Error() != nil {
-		log.Error().Msgf("Can not subscribe to topic %s: %v", m.conf.Topic, token.Error())
 		return token.Error()
 	}
 
