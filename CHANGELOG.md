@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/soerenschneider/shutdown-listener/compare/v1.1.1...v1.1.2) (2023-02-12)
+
+
+### Bug Fixes
+
+* re-subscribe to topic after disconnect ([cde49e2](https://github.com/soerenschneider/shutdown-listener/commit/cde49e23e05d241769f7ec8dd2ff0d8b1f74f974))
+
 ## [1.1.1](https://github.com/soerenschneider/shutdown-listener/compare/v1.1.0...v1.1.1) (2022-08-22)
 
 
